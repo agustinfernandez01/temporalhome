@@ -3,8 +3,14 @@
 import { UserIcon, CogIcon  as SettingsIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export default function Page() {
+
+    const supabase = new SupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    );
 
     const router = useRouter();
 
@@ -12,9 +18,13 @@ export default function Page() {
         admin: [
             { nombre: 'Usuarios', icono: <UserIcon className="h-6 w-6" />, enlace: '/admin/usuarios' },
             { nombre: 'Configuración', icono: <SettingsIcon className="h-6 w-6" />, enlace: '/admin/configuracion' },
-            { nombre: "Propiedades", icono: <BuildingOfficeIcon className="h-6 w-6" />, enlace: '/admin/propiedades' },
+            { nombre: "Propiedades", icono: <BuildingOfficeIcon className="h-6 w-6" />, enlace: '/admin/dashboard/propiedades' },
             { nombre: "Clientes" , icono: <UserGroupIcon className="h-6 w-6" />, enlace: '/admin/clientes' },
-        ]
+        ],
+        user: [
+            { nombre: "Propiedades", icono: <BuildingOfficeIcon className="h-6 w-6" />, enlace: '/admin/propiedades' },
+            { nombre: "Clientes" , icono: <UserGroupIcon className="h-6 w-6" />, enlace: '/admin/clientes' }
+        ],
     };
     
     return (

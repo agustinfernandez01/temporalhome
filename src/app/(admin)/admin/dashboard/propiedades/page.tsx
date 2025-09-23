@@ -1,5 +1,4 @@
 'use client';
-
 import AdminDTO  from '@/DTOs/propsDTO/AdminDto';
 import { cache, useEffect, useState } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
@@ -92,6 +91,9 @@ const page = () => {
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
                                     Servicios
                                 </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                                    Cocheras
+                                </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                                     Acciones
                                 </th>
@@ -135,6 +137,11 @@ const page = () => {
                                     <td className="px-4 py-4 text-sm text-gray-500">
                                         <div className="max-h-16 overflow-y-auto max-w-xs">
                                             {prop.servicios}
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-4 text-sm text-gray-500">
+                                        <div className="max-h-16 overflow-y-auto max-w-xs">
+                                            {prop.cocheras}
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">

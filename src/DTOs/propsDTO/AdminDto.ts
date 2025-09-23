@@ -1,4 +1,4 @@
-export default interface PropDto {
+export default interface AdminDto {
     id: number;
     nombre: string;
     direccion: string;
@@ -10,4 +10,5 @@ export default interface PropDto {
     estado : string;
     descripcion : string;
     servicios : string;
+    cocheras: number;
 }
