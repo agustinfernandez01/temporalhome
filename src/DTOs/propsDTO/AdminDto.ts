@@ -11,4 +11,5 @@ export default interface AdminDto {
     descripcion : string;
     servicios : string;
     cocheras: number;
+    ubicacionGoogle : string;
 }

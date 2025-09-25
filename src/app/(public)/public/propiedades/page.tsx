@@ -1,256 +1,147 @@
 'use client';
-import React, { useState } from 'react';
+import React from 'react'
+import CardList from '@/Components/Cards/CardList'
+import { useEffect, useState } from 'react'
+import CardListDto from '@/DTOs/propsDTO/CardListDto';
 
-// Interfaces TypeScript
-interface PropertyService {
-  icon: string;
-  name: string;
-}
+const page = () => {
+  const [cards, setCards] = useState<CardListDto[]>([]);
+  const [loading, setLoading] = useState(true);
 
-interface PropertyData {
-  id: string;
-  nombre: string;
-  direccion: string;
-  capacidad: number;
-  tipo: string;
-  ambientes: number;
-  baños: number;
-  camas: number;
-  estado: 'Disponible' | 'Ocupado' | 'Mantenimiento';
-  descripcion: string;
-  servicios: PropertyService[];
-  cocheras: number;
-}
+  useEffect(() => {
+    const fetchCards = async () => {
+      try {
+        const response = await fetch('/api/propiedades/cards/cardslist');
+        const data = await response.json();
+        setCards(data);
+      } catch (error) {
+        console.error('Error fetching cards:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-interface StatCardProps {
-  icon: string;
-  value: number;
-  label: string;
-}
-
-interface ServiceItemProps {
-  service: PropertyService;
-}
-
-interface DetailItemProps {
-  label: string;
-  value: string | number;
-  isStatus?: boolean;
-}
-
-// Componentes
-const StatCard: React.FC<StatCardProps> = ({ icon, value, label }) => (
-  <div className="bg-white p-6 rounded-xl text-center shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-    <div className="bg-[#FF5733] text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
-      {icon}
-    </div>
-    <div className="text-2xl font-bold text-gray-900">{value}</div>
-    <div className="text-sm text-gray-600">{label}</div>
-  </div>
-);
-
-const ServiceItem: React.FC<ServiceItemProps> = ({ service }) => (
-  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-    <span className="text-[#FF5733] text-xl">{service.icon}</span>
-    <span className="font-medium text-gray-700">{service.name}</span>
-  </div>
-);
-
-const DetailItem: React.FC<DetailItemProps> = ({ label, value, isStatus = false }) => (
-  <div className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
-    <span className="text-gray-600 font-medium">{label}:</span>
-    <span className={`font-semibold ${isStatus ? 'text-[#FF5733]' : 'text-gray-900'}`}>
-      {value}
-    </span>
-  </div>
-);
-
-const PropertySection: React.FC = () => {
-  // Estado para manejar los datos de la propiedad
-  const [propertyData] = useState<PropertyData>({
-    id: "PROP-001",
-    nombre: "Casa Moderna en Barrio Norte",
-    direccion: "Av. Libertador 1234, San Miguel de Tucumán",
-    capacidad: 6,
-    tipo: "Casa",
-    ambientes: 4,
-    baños: 2,
-    camas: 3,
-    estado: "Disponible",
-    descripcion: "Hermosa casa moderna ubicada en el corazón de Barrio Norte. Esta propiedad cuenta con amplios espacios, excelente iluminación natural y acabados de primera calidad. Perfecta para familias que buscan comodidad y estilo en una ubicación privilegiada.",
-    servicios: [
-      { icon: "💡", name: "Luz" },
-      { icon: "💧", name: "Agua" },
-      { icon: "🔥", name: "Gas" },
-      { icon: "📡", name: "Internet" },
-      { icon: "📺", name: "Cable" },
-      { icon: "❄️", name: "Aire Acondicionado" },
-      { icon: "🔒", name: "Seguridad" },
-      { icon: "🏊‍♀️", name: "Piscina" }
-    ],
-    cocheras: 1
-  });
-
-  // Estado para manejar modales o acciones
-  const [showContactModal, setShowContactModal] = useState<boolean>(false);
-
-  // Handlers
-  const handleContactClick = (): void => {
-    setShowContactModal(true);
-    setTimeout(() => {
-      setShowContactModal(false);
-      alert('¡Gracias por tu interés! Te contactaremos pronto.');
-    }, 1500);
-  };
-
-  const handleScheduleVisit = (): void => {
-    alert('Funcionalidad de agendar visita en desarrollo');
-  };
-
-  // Función para obtener el color del estado
-  const getStatusColor = (status: PropertyData['estado']): string => {
-    switch (status) {
-      case 'Disponible':
-        return 'text-green-600 bg-green-100';
-      case 'Ocupado':
-        return 'text-red-600 bg-red-100';
-      case 'Mantenimiento':
-        return 'text-yellow-600 bg-yellow-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
-    }
-  };
+    fetchCards();
+  }, []);
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Property Hero */}
-        <div className="bg-white rounded-2xl overflow-hidden shadow-xl mb-8">
-          {/* Property Image */}
-          <div className="relative h-96 bg-gradient-to-br from-[#FF5733] to-[#FF8C69] flex items-center justify-center">
-            <div className="absolute top-6 right-6">
-              <span className={`px-4 py-2 rounded-full font-semibold text-sm ${getStatusColor(propertyData.estado)}`}>
-                {propertyData.estado}
-              </span>
-            </div>
-            <div className="text-white text-xl font-medium z-10">
-              📸 Imagen de la propiedad
-            </div>
-            {/* Texture overlay */}
-            <div 
-              className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage: 'radial-gradient(circle at 25% 25%, white 2px, transparent 0), radial-gradient(circle at 75% 75%, white 2px, transparent 0)',
-                backgroundSize: '50px 50px'
-              }}
-            />
-          </div>
-          
-          {/* Property Content */}
-          <div className="p-8">
-            {/* Property Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3 font-sans">
-                {propertyData.nombre}
-              </h1>
-              <div className="flex items-center text-gray-600 text-lg">
-                <span className="mr-2">📍</span>
-                <span>{propertyData.direccion}</span>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Section - Responsive */}
+      <div className="bg-white shadow-sm border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 md:py-10 lg:py-12">
+          <div className="text-center">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
+              Encuentra tu Próximo Hogar
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl mx-auto leading-relaxed px-2 sm:px-0">
+              Descubre nuestra selección exclusiva de propiedades premium.
+              <span className="hidden sm:inline"> Desde apartamentos modernos hasta espacios únicos,</span>
+              <span className="hidden md:inline"> encuentra el lugar perfecto que se adapte a tu estilo de vida.</span>
+            </p>
+            
+            {/* Features - Adaptable layout */}
+            <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 text-xs sm:text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0"></div>
+                <span className="whitespace-nowrap">Ubicaciones premium</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0"></div>
+                <span className="whitespace-nowrap">Verificado y seguro</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0"></div>
+                <span className="whitespace-nowrap">Reserva inmediata</span>
               </div>
             </div>
-
-            {/* Highlight Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-              <StatCard
-                icon="👥"
-                value={propertyData.capacidad}
-                label="Capacidad"
-              />
-              <StatCard
-                icon="🏠"
-                value={propertyData.ambientes}
-                label="Ambientes"
-              />
-              <StatCard
-                icon="🛏️"
-                value={propertyData.camas}
-                label="Camas"
-              />
-              <StatCard
-                icon="🚿"
-                value={propertyData.baños}
-                label="Baños"
-              />
-              <StatCard
-                icon="🚗"
-                value={propertyData.cocheras}
-                label="Cochera"
-              />
-            </div>
-
-            {/* Property Details */}
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
-              <div className="bg-gray-50 p-6 rounded-xl border-l-4 border-[#FF5733]">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Información Básica</h3>
-                <div className="space-y-1">
-                  <DetailItem label="ID" value={propertyData.id} />
-                  <DetailItem label="Tipo" value={propertyData.tipo} />
-                  <DetailItem label="Estado" value={propertyData.estado} isStatus />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Description Section */}
-        <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">Descripción</h3>
-          <p className="text-gray-700 leading-relaxed mb-8 text-lg">
-            {propertyData.descripcion}
-          </p>
-          
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">Servicios Incluidos</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {propertyData.servicios.map((service, index) => (
-              <ServiceItem key={index} service={service} />
-            ))}
-          </div>
-        </div>
-
-        {/* Call to Action */}
-        <div className="bg-gradient-to-r from-[#FF5733] to-[#FF8C69] text-white p-8 rounded-xl text-center relative overflow-hidden shadow-lg">
-          {/* Loading overlay cuando se está contactando */}
-          {showContactModal && (
-            <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center z-10">
-              <div className="bg-white text-[#FF5733] p-6 rounded-lg shadow-xl">
-                <div className="animate-spin w-8 h-8 border-4 border-[#FF5733] border-t-transparent rounded-full mx-auto mb-3"></div>
-                <p className="font-semibold">Procesando...</p>
-              </div>
-            </div>
-          )}
-          
-          <h3 className="text-2xl font-bold mb-3">¿Te interesa esta propiedad?</h3>
-          <p className="mb-8 opacity-90 text-lg">Contacta con nosotros para más información o para agendar una visita</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={handleContactClick}
-              disabled={showContactModal}
-              className="bg-white text-[#FF5733] px-8 py-4 rounded-lg font-bold text-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              📞 Contactar Ahora
-            </button>
-            <button
-              onClick={handleScheduleVisit}
-              className="bg-white text-[#FF5733] px-8 py-4 rounded-lg font-bold text-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-200"
-            >
-              📅 Agendar Visita
-            </button>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
 
-export default PropertySection;
+      {/* Properties Counter - Responsive */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+          <div className="flex-1">
+            {loading ? (
+              <div className="animate-pulse">
+                <div className="h-5 sm:h-6 bg-gray-200 rounded w-32 sm:w-48"></div>
+              </div>
+            ) : (
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
+                {cards.length} {cards.length === 1 ? 'Propiedad Disponible' : 'Propiedades Disponibles'}
+              </h2>
+            )}
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              <span className="sm:hidden">Toca para ver detalles</span>
+              <span className="hidden sm:inline">Haz clic en cualquier propiedad para ver más detalles</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Properties List - Responsive */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8 md:pb-12">
+        {loading ? (
+          // Loading skeleton - Responsive
+          <div className="flex flex-col items-center space-y-4 sm:space-y-6">
+            {[...Array(3)].map((_, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse w-full max-w-xs sm:max-w-2xl md:max-w-4xl lg:max-w-5xl">
+                <div className="flex flex-col sm:flex-row h-64 sm:h-56 md:h-64 lg:h-72">
+                  <div className="w-full sm:w-60 md:w-80 lg:w-96 bg-gray-300 h-40 sm:h-full"></div>
+                  <div className="flex-1 p-4 sm:p-6 space-y-3 sm:space-y-4">
+                    <div className="space-y-2">
+                      <div className="h-4 sm:h-5 md:h-6 bg-gray-300 rounded w-3/4"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-full"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-2/3"></div>
+                    </div>
+                    <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-6">
+                      <div className="h-8 sm:h-10 md:h-12 bg-gray-300 rounded w-16 sm:w-20"></div>
+                      <div className="h-8 sm:h-10 md:h-12 bg-gray-300 rounded w-16 sm:w-20"></div>
+                      <div className="h-8 sm:h-10 md:h-12 bg-gray-300 rounded w-16 sm:w-20"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : cards.length > 0 ? (
+          <div className="flex flex-col items-start space-y-4 sm:space-y-6 md:space-y-8">
+            {cards.map((card, index) => (
+              <div 
+                key={index} 
+                className="transform hover:scale-[1.005] sm:hover:scale-[1.01] transition-transform duration-200 w-full max-w-xs sm:max-w-2xl md:max-w-4xl lg:max-w-5xl"
+              >
+                <CardList {...card} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          // Empty state - Responsive
+          <div className="text-center py-8 sm:py-12 px-4">
+            <div className="max-w-xs sm:max-w-md mx-auto">
+              <div className="w-16 sm:w-20 md:w-24 h-16 sm:h-20 md:h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <h3 className="text-base sm:text-lg md:text-xl font-medium text-gray-900 mb-2">
+                No hay propiedades disponibles
+              </h3>
+              <p className="text-sm sm:text-base text-gray-500 leading-relaxed">
+                Actualmente no tenemos propiedades que mostrar.
+                <span className="hidden sm:inline"><br /></span>
+                <span className="sm:hidden"> </span>
+                Vuelve a intentarlo más tarde.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Optional bottom padding for mobile navigation */}
+      <div className="h-16 sm:h-0"></div>
+    </div>
+  )
+}
+
+export default page

@@ -1,19 +1,13 @@
-import React from "react";
-import Footer from "../../Components/Layout/Footer";
-import Navbar from "../../Components/Layout/Navbar";
+// src/app/(public)/layout.tsx  ✅ sin <html>/<body>
+import Navbar from '../../Components/Layout/Navbar';
+import Footer from '../../Components/Layout/Footer';
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
-        <Navbar />
-        {children}
-        <Footer />
-      </body>
-    </html>
+    <div className="min-h-dvh flex flex-col">
+      <Navbar />
+      <main className="flex-1">{children}</main>
+      <Footer />
+    </div>
   );
 }

@@ -203,7 +203,7 @@ const TemporalHomeLanding = () => {
                   
                 ))
               ) : (
-                <p className="text-center text-gray-500 col-span-full">No se encontraron propiedades.</p>
+                <p className="text-center text-gray-500 col-span-full">No hay propiedades disponibles.</p>
               )}
             </div>
 

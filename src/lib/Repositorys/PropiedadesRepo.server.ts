@@ -2,15 +2,18 @@ import "server-only";
 import { createSupabase } from "../index.server";
 import AdminDTO from "../../DTOs/propsDTO/AdminDto";
 import CardDTO from '../../DTOs/propsDTO/CardDto'; // Import as a type
+import CardListDto from "../../DTOs/propsDTO/CardListDto";
 
-// Mostrar todas las propiedades
+{/*---------------- ADMIN ---------------- */}
+
+// Mostrar todas las propiedades 
 const getPropiedades = async (): Promise<AdminDTO[]> => {
 
     try{
         const supabase = await createSupabase();
         const { data, error } = await supabase
             .from('propiedades')
-            .select('id,nombre,direccion,capacidad,tipo,ambientes,banios,camas,estado,descripcion,servicios,cocheras');
+            .select('id,nombre,direccion,capacidad,tipo,ambientes,banios,camas,estado,descripcion,servicios,cocheras,ubicacionGoogle');
         if (error) {
             console.error("Error fetching properties:", error);
             return [];
@@ -23,7 +26,7 @@ const getPropiedades = async (): Promise<AdminDTO[]> => {
     }
 }
 
-// Insertar una propiedad
+// Insertar una propiedad 
 const postPropiedad = async (propiedad : AdminDTO) : Promise<boolean> => {
     try {
         const supabase = await createSupabase();
@@ -43,6 +46,9 @@ const postPropiedad = async (propiedad : AdminDTO) : Promise<boolean> => {
     }
 
 };
+
+
+{/*---------------- PUBLIC ---------------- */}
 
 const getPropiedadesCard = async (): Promise<CardDTO[]> => {
     const supabase = await createSupabase();
@@ -64,4 +70,24 @@ const getPropiedadesCard = async (): Promise<CardDTO[]> => {
         }
     }   
 
-export { getPropiedades, postPropiedad , getPropiedadesCard };
+const getPropiedadesCardList = async (): Promise<CardListDto[]> => {
+    const supabase = await createSupabase();
+
+    try {
+        const { data, error } = await supabase
+            .from('propiedades')
+            .select('nombre, ubicacion, descripcion, img, cocheras, capacidad, ambientes');
+
+        if (error) {
+            console.error("Error fetching property cards:", error);
+            return [];
+        }
+
+        return data as CardListDto[];
+    } catch (error) {
+        console.error("Error fetching property cards:", error);
+        return [];
+    }
+}
+
+export { getPropiedades, postPropiedad , getPropiedadesCard , getPropiedadesCardList };

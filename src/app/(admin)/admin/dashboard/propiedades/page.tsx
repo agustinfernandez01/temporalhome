@@ -92,6 +92,9 @@ const page = () => {
                                     Servicios
                                 </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                                    Ubicación Google
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
                                     Cocheras
                                 </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
@@ -137,6 +140,11 @@ const page = () => {
                                     <td className="px-4 py-4 text-sm text-gray-500">
                                         <div className="max-h-16 overflow-y-auto max-w-xs">
                                             {prop.servicios}
+                                        </div>
+                                    </td>
+                                       <td className="px-4 py-4 text-sm text-gray-500">
+                                        <div className="max-h-16 overflow-y-auto max-w-xs">
+                                            {prop.ubicacionGoogle}
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 text-sm text-gray-500">
