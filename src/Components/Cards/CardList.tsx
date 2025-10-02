@@ -1,8 +1,19 @@
 'use client';
 import { Users, Home, Car } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import CardListDto from '../../DTOs/propsDTO/CardListDto';
 
-const CardList: React.FC<CardListDto> = (props) => {
+const CardList: React.FC<CardListDto> = ({ id  , img  , capacidad ,  nombre , ambientes , descripcion  , cocheras  }) => {
+  const router = useRouter();
+
+  const handleClick = () => {
+    if (id === null || id === undefined) {
+      console.error('Card sin id:');
+      return; // evita navegar a .../undefined
+    }
+    router.push(`/propiedades/propdetails/${id}`);
+  };
+
   return (
     <article className="w-full">
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
@@ -11,8 +22,8 @@ const CardList: React.FC<CardListDto> = (props) => {
           {/* Imagen responsive */}
           <div className="relative w-full sm:w-64 md:w-80 lg:w-96 xl:w-[420px] h-48 sm:h-full flex-shrink-0">
             <img
-              src={props.img ?? 'https://via.placeholder.com/420x320?text=No+Image'}
-              alt={props.nombre}
+              src={img ?? 'https://via.placeholder.com/420x320?text=No+Image'}
+              alt={nombre}
               className="absolute inset-0 w-full h-full object-cover"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -29,22 +40,17 @@ const CardList: React.FC<CardListDto> = (props) => {
             </div>
             {/* Overlay responsive */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent" />
-            
             {/* Badge responsive */}
-            <div className="absolute top-3 sm:top-4 left-3 sm:left-4 bg-orange-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
-              <span className="sm:hidden">★</span>
-              <span className="hidden sm:inline">Destacado</span>
-            </div>
           </div>
 
           {/* Contenido responsive */}
           <div className="flex-1 p-4 sm:p-5 md:p-6 lg:p-8 flex flex-col justify-between bg-gradient-to-br from-white to-gray-50/30">
             <div className="mb-3 sm:mb-4">
               <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-3 leading-tight">
-                {props.nombre}
+                {nombre}
               </h2>
               <p className="text-gray-600 text-sm sm:text-base leading-relaxed line-clamp-2 sm:line-clamp-3 md:line-clamp-4">
-                {props.descripcion}
+                {descripcion}
               </p>
             </div>
 
@@ -57,7 +63,7 @@ const CardList: React.FC<CardListDto> = (props) => {
                 <div className="text-center sm:text-left">
                   <p className="text-xs text-gray-500 uppercase tracking-wide font-medium hidden sm:block">Cocheras</p>
                   <p className="text-xs sm:text-sm md:text-lg font-bold text-gray-900">
-                    {props.cocheras}
+                    {cocheras}
                   </p>
                   <p className="text-xs text-gray-500 sm:hidden">Cocheras</p>
                 </div>
@@ -70,7 +76,7 @@ const CardList: React.FC<CardListDto> = (props) => {
                 <div className="text-center sm:text-left">
                   <p className="text-xs text-gray-500 uppercase tracking-wide font-medium hidden sm:block">Capacidad</p>
                   <p className="text-xs sm:text-sm md:text-lg font-bold text-gray-900">
-                    {props.capacidad}
+                    {capacidad}
                   </p>
                   <p className="text-xs text-gray-500 sm:hidden">Personas</p>
                 </div>
@@ -83,7 +89,7 @@ const CardList: React.FC<CardListDto> = (props) => {
                 <div className="text-center sm:text-left">
                   <p className="text-xs text-gray-500 uppercase tracking-wide font-medium hidden sm:block">Ambientes</p>
                   <p className="text-xs sm:text-sm md:text-lg font-bold text-gray-900">
-                    {props.ambientes}
+                    {ambientes}
                   </p>
                   <p className="text-xs text-gray-500 sm:hidden">Ambientes</p>
                 </div>
@@ -92,13 +98,19 @@ const CardList: React.FC<CardListDto> = (props) => {
 
             {/* Botones responsive */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4">
-              <button className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium sm:font-semibold py-2 sm:py-2.5 md:py-3 px-4 sm:px-5 md:px-6 rounded-lg sm:rounded-xl text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-lg transform active:scale-95 sm:hover:scale-105">
+              <button
+                type="button"
+                className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium sm:font-semibold py-2 sm:py-2.5 md:py-3 px-4 sm:px-5 md:px-6 rounded-lg sm:rounded-xl text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-lg transform active:scale-95 sm:hover:scale-105"
+                onClick={handleClick}
+              >
                 Ver Detalles
               </button>
-              <button 
-              className="flex-1 border border-gray-200 sm:border-2 hover:border-orange-300 bg-white hover:bg-orange-50 text-gray-700 hover:text-orange-600 font-medium sm:font-semibold py-2 sm:py-2.5 md:py-3 px-4 sm:px-5 md:px-6 rounded-lg sm:rounded-xl text-sm sm:text-base transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 sm:hover:scale-105"
-              onClick={() => {}}>
-              Reservar
+              <button
+                type="button"
+                className="flex-1 border border-gray-200 sm:border-2 hover:border-orange-300 bg-white hover:bg-orange-50 text-gray-700 hover:text-orange-600 font-medium sm:font-semibold py-2 sm:py-2.5 md:py-3 px-4 sm:px-5 md:px-6 rounded-lg sm:rounded-xl text-sm sm:text-base transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 sm:hover:scale-105"
+                onClick={() => { handleClick(); }}
+              >
+                Reservar
               </button>
             </div>
           </div>

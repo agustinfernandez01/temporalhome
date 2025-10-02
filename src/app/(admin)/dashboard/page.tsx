@@ -18,7 +18,7 @@ export default function Page() {
         admin: [
             { nombre: 'Usuarios', icono: <UserIcon className="h-6 w-6" />, enlace: '/admin/usuarios' },
             { nombre: 'Configuración', icono: <SettingsIcon className="h-6 w-6" />, enlace: '/admin/configuracion' },
-            { nombre: "Propiedades", icono: <BuildingOfficeIcon className="h-6 w-6" />, enlace: '/admin/dashboard/propiedades' },
+            { nombre: "Propiedades", icono: <BuildingOfficeIcon className="h-6 w-6" />, enlace: '/dashboard/propiedades' },
             { nombre: "Clientes" , icono: <UserGroupIcon className="h-6 w-6" />, enlace: '/admin/clientes' },
         ],
         user: [

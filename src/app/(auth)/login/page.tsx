@@ -24,7 +24,7 @@ export default function Page() {
             return;
         }
         else {
-            router.push('/admin/dashboard');
+            router.push('/dashboard');
         }
 
     };

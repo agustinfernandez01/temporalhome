@@ -1,4 +1,5 @@
 export default interface CardListDto {
+    id: number;
     nombre: string;
     descripcion: string;
     img: string;

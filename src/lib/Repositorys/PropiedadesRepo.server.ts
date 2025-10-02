@@ -3,8 +3,8 @@ import { createSupabase } from "../index.server";
 import AdminDTO from "../../DTOs/propsDTO/AdminDto";
 import CardDTO from '../../DTOs/propsDTO/CardDto'; // Import as a type
 import CardListDto from "../../DTOs/propsDTO/CardListDto";
+import PropDetail from "@/DTOs/propsDTO/PropDetail";
 
-{/*---------------- ADMIN ---------------- */}
 
 // Mostrar todas las propiedades 
 const getPropiedades = async (): Promise<AdminDTO[]> => {
@@ -24,6 +24,43 @@ const getPropiedades = async (): Promise<AdminDTO[]> => {
         console.error("Error fetching properties:", error);
         return [];
     }
+}
+
+// Mostrar una propiedad por ID
+
+const getPropiedadById = async (id: number): Promise<PropDetail | null> => {
+  try {
+    const supabase = await createSupabase();
+    const { data, error } = await supabase
+      .from('propiedades')
+      .select('id,nombre,direccion,capacidad,tipo,ambientes,banios,camas,estado,descripcion,servicios_json,cocheras,ubicacionGoogle,img')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) return null;
+
+    const raw: any = data;
+
+    const servicios_json =
+      Array.isArray(raw.servicios_json) ? raw.servicios_json
+      : typeof raw.servicios_json === "string" ? safeParseArray(raw.servicios_json) ?? []
+      : [];
+
+    const img =
+      Array.isArray(raw.img) ? raw.img
+      : typeof raw.img === "string"
+        ? (safeParseArray(raw.img) ?? raw.img) // si es JSON array → array; si es URL simple → string
+        : raw.img ?? null;
+
+    return { ...raw, servicios_json, img } as PropDetail;
+  } catch {
+    return null;
+  }
+};
+
+function safeParseArray(v: string): string[] | null {
+  try { const p = JSON.parse(v); return Array.isArray(p) ? p : null; }
+  catch { return null; }
 }
 
 // Insertar una propiedad 
@@ -47,8 +84,6 @@ const postPropiedad = async (propiedad : AdminDTO) : Promise<boolean> => {
 
 };
 
-
-{/*---------------- PUBLIC ---------------- */}
 
 const getPropiedadesCard = async (): Promise<CardDTO[]> => {
     const supabase = await createSupabase();
@@ -76,7 +111,7 @@ const getPropiedadesCardList = async (): Promise<CardListDto[]> => {
     try {
         const { data, error } = await supabase
             .from('propiedades')
-            .select('nombre, ubicacion, descripcion, img, cocheras, capacidad, ambientes');
+            .select('id, nombre, ubicacion, descripcion, img, cocheras, capacidad, ambientes');
 
         if (error) {
             console.error("Error fetching property cards:", error);
@@ -90,4 +125,4 @@ const getPropiedadesCardList = async (): Promise<CardListDto[]> => {
     }
 }
 
-export { getPropiedades, postPropiedad , getPropiedadesCard , getPropiedadesCardList };
+export { getPropiedades, postPropiedad , getPropiedadesCard , getPropiedadesCardList , getPropiedadById };

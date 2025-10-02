@@ -106,9 +106,9 @@ const page = () => {
           </div>
         ) : cards.length > 0 ? (
           <div className="flex flex-col items-start space-y-4 sm:space-y-6 md:space-y-8">
-            {cards.map((card, index) => (
+            {cards.map((card, id) => (
               <div 
-                key={index} 
+                key={id} 
                 className="transform hover:scale-[1.005] sm:hover:scale-[1.01] transition-transform duration-200 w-full max-w-xs sm:max-w-2xl md:max-w-4xl lg:max-w-5xl"
               >
                 <CardList {...card} />

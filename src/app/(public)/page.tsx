@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Home, MapPin, Calendar, Users, Star, ArrowRight, Shield, Award, Clock, Phone, Mail, Facebook, Instagram, Twitter, Search, Play, ChevronDown } from 'lucide-react';
 import CardPropiedad from '@/Components/Cards/CardPropiedad';
+import { useRouter } from 'next/navigation';
 import CardDto from '@/DTOs/propsDTO/CardDto';
 
 const TemporalHomeLanding = () => {
@@ -9,6 +10,7 @@ const TemporalHomeLanding = () => {
   const [scrollY, setScrollY] = useState(0);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [cards, setCards] = useState<CardDto[]>([]);
+  const router = useRouter();
 
   const fetchCards = async () => {
     try {
@@ -157,7 +159,8 @@ const TemporalHomeLanding = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <button className="px-10 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full hover:from-orange-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-3 shadow-lg font-medium text-lg">
+                <button className="px-10 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full hover:from-orange-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-3 shadow-lg font-medium text-lg" 
+                onClick={() => router.push('/propiedades')}>
                   <span>Explorar Propiedades</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
@@ -188,7 +191,7 @@ const TemporalHomeLanding = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
-                Propiedades <span className="text-orange-500">Destacadas</span>
+                Propiedades destacadas en <span className="text-orange-500">Tucuman</span>
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                 Descubre nuestra selección de alojamientos premium, cuidadosamente elegidos para ofrecerte la mejor experiencia de estadía
@@ -208,7 +211,8 @@ const TemporalHomeLanding = () => {
             </div>
 
             <div className="text-center">
-              <button className="px-10 py-4 bg-white border-2 border-orange-500 text-orange-600 rounded-full hover:bg-orange-500 hover:text-white transition-all duration-300 transform hover:scale-105 font-medium text-lg shadow-md">
+              <button className="px-10 py-4 bg-white border-2 border-orange-500 text-orange-600 rounded-full hover:bg-orange-500 hover:text-white transition-all duration-300 transform hover:scale-105 font-medium text-lg shadow-md"
+              onClick={() => router.push('/propiedades')}>
                 Ver Todas las Propiedades
               </button>
             </div>
@@ -309,7 +313,8 @@ const TemporalHomeLanding = () => {
               Únete a miles de viajeros que ya confían en Temporal Home para sus estadías perfectas
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <button className="px-12 py-4 bg-white text-orange-600 rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 text-lg font-semibold shadow-lg">
+              <button className="px-12 py-4 bg-white text-orange-600 rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 text-lg font-semibold shadow-lg"
+              onClick={() => router.push('/propiedades')}>
                 Comenzar Ahora
               </button>
               <button className="px-12 py-4 bg-transparent border-2 border-white text-white rounded-full hover:bg-white/10 transition-all duration-300 transform hover:scale-105 text-lg font-medium">

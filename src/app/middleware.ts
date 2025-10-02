@@ -1,8 +1,8 @@
-// src/middleware.ts  (o middleware.ts en la raíz del proyecto)
+// middleware.ts (en la raíz)
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-/** Lee si existe la cookie de sesión de Supabase (sb-...-auth-token) */
+/** ¿Hay cookie de sesión de Supabase? (sb-...-auth-token) */
 function hasSupabaseSession(req: NextRequest) {
   return req.cookies
     .getAll()
@@ -14,8 +14,8 @@ function hasSupabaseSession(req: NextRequest) {
     );
 }
 
-/** Aplica headers anti-cache en la RESPUESTA */
-function applyNoStore<T extends NextResponse>(res: T): T {
+/** Anti-cache en la respuesta */
+function noStore<T extends NextResponse>(res: T): T {
   res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
   res.headers.set("Pragma", "no-cache");
   res.headers.set("Expires", "0");
@@ -23,10 +23,19 @@ function applyNoStore<T extends NextResponse>(res: T): T {
 }
 
 export function middleware(req: NextRequest) {
-  // normalizo para evitar problemas con barras finales
-  const pathname = req.nextUrl.pathname.replace(/\/+$/, "");
+  const { pathname } = req.nextUrl;
 
-  // 1) Solo actuamos en /admin/*
+  // Ignorar assets/sistema
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname === "/favicon.ico" ||
+    pathname.startsWith("/public")
+  ) {
+    return NextResponse.next();
+  }
+
+  // Solo actuamos en /admin/*
   if (!pathname.startsWith("/admin")) {
     return NextResponse.next();
   }
@@ -34,25 +43,23 @@ export function middleware(req: NextRequest) {
   const isLogin = pathname === "/admin/login";
   const isAuth = hasSupabaseSession(req);
 
-  // 2) Sin sesión e intenta acceder a /admin/* (que no sea login) -> redirijo a login
-  if (!isAuth && !isLogin) {
+  // ⚠️ Nunca redirigir desde /admin/login (evita loops)
+  if (isLogin) {
+    // Si ya querés, podés mandar al dashboard aquí SOLO si estás 100% seguro de que la sesión es válida.
+    return noStore(NextResponse.next());
+  }
+
+  // Resto de /admin/* protegido
+  if (!isAuth) {
     const url = req.nextUrl.clone();
     url.pathname = "/admin/login";
-    return applyNoStore(NextResponse.redirect(url));
+    url.searchParams.set("redirect", pathname); // opcional
+    return noStore(NextResponse.redirect(url));
   }
 
-  // 3) Con sesión e intenta ver el login -> redirijo al dashboard
-  if (isAuth && isLogin) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/admin/dashboard";
-    return applyNoStore(NextResponse.redirect(url));
-  }
-
-  // 4) Dejar pasar, PERO con anti-cache para que "Atrás" no muestre versión vieja
-  return applyNoStore(NextResponse.next());
+  return noStore(NextResponse.next());
 }
 
-/** 5) Dónde corre el middleware */
 export const config = {
-  matcher: ["/admin", "/admin/:path*"],
+  matcher: ["/admin/:path*"], // protege todo /admin/* (login también pasa pero sin redirección)
 };
