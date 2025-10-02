@@ -1,10 +1,13 @@
 'use client';
 import AdminDTO  from '@/DTOs/propsDTO/AdminDto';
 import { cache, useEffect, useState } from 'react';
+import ModalAdd from '@/app/Modals/ModalAdd';
 import { PlusIcon } from '@heroicons/react/24/outline';
+
 
 const page = () => {
     const [propiedades, setPropiedades] = useState<AdminDTO[]>([]);
+    const [openModal, setOpenModal] = useState(false);
 
     const fetchProps = async () => {
         try {
@@ -43,8 +46,7 @@ const page = () => {
                 </div>
                 <button 
                     onClick={() => {
-                        // Aquí puedes agregar la lógica para abrir modal o navegar a formulario
-                        console.log('Agregar nueva propiedad');
+                        setOpenModal(true);
                     }}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
                 >
@@ -169,10 +171,12 @@ const page = () => {
                 {propiedades.length === 0 && (
                     <div className="text-center py-12">
                         <p className="text-gray-500 text-lg">No hay propiedades disponibles</p>
-                        <p className="text-gray-400 text-sm mt-2">Agrega tu primera propiedad para comenzar</p>
                     </div>
                 )}
             </div>
+            {openModal && (
+                <ModalAdd open={openModal} onClose={() => setOpenModal(false)} />
+            )}
         </div>
     </div>
   )

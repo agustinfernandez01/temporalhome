@@ -3,8 +3,13 @@
 import React , { useState } from 'react';
 import { X, Upload, MapPin, Home, Users, Bed, Bath, Grid } from 'lucide-react';
 
+type ModalAddProps = {
+  open: boolean;
+  onClose: () => void;
+};
 
-const AddPropiedadModal = () => {
+const ModalAdd = ({ open, onClose }: ModalAddProps) => {
+
   const [ nombre , setNombre ] = useState('');
   const [ direccion , setDireccion ] = useState('');
   const [ ubicacion , setUbicacion ] = useState('');
@@ -18,10 +23,19 @@ const AddPropiedadModal = () => {
   const [ servicios , setServicios ] = useState<string[]>([]);
   const [ imagenes , setImagenes ] = useState<FileList | null>(null);
 
+  if (!open) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
+      onClick={onClose}                   // 👈 click en backdrop cierra
+      aria-modal="true"
+      role="dialog"
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()} // 👈 evita cerrar al clickear contenido
+      >
         
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -31,7 +45,11 @@ const AddPropiedadModal = () => {
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Agregar Nueva Propiedad</h2>
           </div>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors duration-200">
+          <button
+            onClick={onClose}              // 👈 X cierra
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors duration-200"
+            aria-label="Cerrar"
+          >
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
@@ -249,6 +267,7 @@ const AddPropiedadModal = () => {
           <div className="flex space-x-4">
             <button 
               type="button"
+              onClick={onClose}            // 👈 “Cancelar” cierra
               className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium"
             >
               Cancelar
@@ -266,4 +285,4 @@ const AddPropiedadModal = () => {
   );
 };
 
-export default AddPropiedadModal;
+export default ModalAdd;

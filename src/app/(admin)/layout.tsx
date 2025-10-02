@@ -1,7 +1,7 @@
 // src/app/(admin)/admin/layout.tsx  (SERVER)
 import { redirect } from "next/navigation";
 import { createSupabase } from "@/lib/index.server";
-import { RoleProvider, Rol } from "../../../Components/Providers/role-context";
+import { RoleProvider, Rol } from "../../Components/Providers/role-context";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
