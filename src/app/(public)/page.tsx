@@ -1,4 +1,4 @@
-"use client"; 
+"use client";
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Home, MapPin, Calendar, Users, Star, ArrowRight, Shield, Award, Clock, Phone, Mail, Facebook, Instagram, Twitter, Search, Play, ChevronDown } from 'lucide-react';
 import CardPropiedad from '@/Components/Cards/CardPropiedad';
@@ -16,7 +16,7 @@ const TemporalHomeLanding = () => {
     try {
       const response = await fetch('/api/propiedades/cards');
       const data = await response.json();
-      if (!data){
+      if (!data) {
         console.log("No se encontraron propiedades");
       }
       return data;
@@ -79,9 +79,8 @@ const TemporalHomeLanding = () => {
             {heroSlides.map((slide, index) => (
               <div
                 key={index}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
-                  index === currentSlide ? 'opacity-100' : 'opacity-0'
-                }`}
+                className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'
+                  }`}
               >
                 <img
                   src={slide.image}
@@ -100,7 +99,7 @@ const TemporalHomeLanding = () => {
 
           {/* Content */}
           <div className="relative z-10 text-center max-w-5xl mx-auto px-4">
-            <div 
+            <div
               className="transform transition-all duration-1000"
               style={{
                 transform: `translateY(${scrollY * 0.1}px)`,
@@ -112,33 +111,18 @@ const TemporalHomeLanding = () => {
               <p className="text-xl md:text-2xl text-gray-200 mb-12 leading-relaxed max-w-3xl mx-auto">
                 {heroSlides[currentSlide].subtitle}
               </p>
-              
+
               {/* Search Bar */}
               <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 mb-10 shadow-2xl border border-white/20 max-w-4xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="relative">
-                    <MapPin className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="¿Dónde te quedás?"
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Calendar className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Entrada"
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Calendar className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Salida"
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
+                    <MapPin className="absolute left-4 top-4 w-5 h-5 text-gray-400 pointer-events-none" />
+                    <select className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none">
+                      <option value="">¿Dónde te quedás?</option>
+                      <option value="san-miguel">San Miguel de Tucumán</option>
+                      <option value="yerba-buena">Yerba Buena</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-4 w-5 h-5 text-gray-400 pointer-events-none" />
                   </div>
                   <div className="relative">
                     <Users className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
@@ -159,8 +143,8 @@ const TemporalHomeLanding = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <button className="px-10 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full hover:from-orange-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-3 shadow-lg font-medium text-lg" 
-                onClick={() => router.push('/propiedades')}>
+                <button className="px-10 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full hover:from-orange-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-3 shadow-lg font-medium text-lg"
+                  onClick={() => router.push('/propiedades')}>
                   <span>Explorar Propiedades</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
@@ -178,9 +162,8 @@ const TemporalHomeLanding = () => {
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? 'bg-orange-500 shadow-lg' : 'bg-white/50'
-                }`}
+                className={`w-4 h-4 rounded-full transition-all duration-300 ${index === currentSlide ? 'bg-orange-500 shadow-lg' : 'bg-white/50'
+                  }`}
               />
             ))}
           </div>
@@ -203,7 +186,7 @@ const TemporalHomeLanding = () => {
               {cards && cards.length > 0 ? (
                 cards.map((card) => (
                   <CardPropiedad key={card.id} {...card} />
-                  
+
                 ))
               ) : (
                 <p className="text-center text-gray-500 col-span-full">No hay propiedades disponibles.</p>
@@ -212,7 +195,7 @@ const TemporalHomeLanding = () => {
 
             <div className="text-center">
               <button className="px-10 py-4 bg-white border-2 border-orange-500 text-orange-600 rounded-full hover:bg-orange-500 hover:text-white transition-all duration-300 transform hover:scale-105 font-medium text-lg shadow-md"
-              onClick={() => router.push('/propiedades')}>
+                onClick={() => router.push('/propiedades')}>
                 Ver Todas las Propiedades
               </button>
             </div>
@@ -228,7 +211,7 @@ const TemporalHomeLanding = () => {
                   ¿Por qué elegir <span className="text-orange-500">Temporal Home</span>?
                 </h2>
                 <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                  Somos más que una plataforma de alquileres temporales. Creamos experiencias memorables 
+                  Somos más que una plataforma de alquileres temporales. Creamos experiencias memorables
                   conectando viajeros con espacios únicos que se sienten como un verdadero hogar.
                 </p>
                 <div className="space-y-6">
@@ -295,7 +278,7 @@ const TemporalHomeLanding = () => {
         </section>
 
         {/* Testimonials */}
-        
+
 
         {/* CTA Section */}
         <section className="py-24 bg-gradient-to-r from-orange-500 to-orange-600 text-white relative overflow-hidden">
@@ -304,7 +287,7 @@ const TemporalHomeLanding = () => {
             <div className="absolute bottom-10 right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
           </div>
-          
+
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
             <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
               ¿Listo para tu próxima aventura?
@@ -314,7 +297,7 @@ const TemporalHomeLanding = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <button className="px-12 py-4 bg-white text-orange-600 rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 text-lg font-semibold shadow-lg"
-              onClick={() => router.push('/propiedades')}>
+                onClick={() => router.push('/propiedades')}>
                 Comenzar Ahora
               </button>
               <button className="px-12 py-4 bg-transparent border-2 border-white text-white rounded-full hover:bg-white/10 transition-all duration-300 transform hover:scale-105 text-lg font-medium">
@@ -325,7 +308,7 @@ const TemporalHomeLanding = () => {
         </section>
       </main>
 
-     
+
     </div>
   );
 };
