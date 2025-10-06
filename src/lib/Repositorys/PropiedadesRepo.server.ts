@@ -64,24 +64,41 @@ function safeParseArray(v: string): string[] | null {
 }
 
 // Insertar una propiedad 
-const postPropiedad = async (propiedad : AdminDTO) : Promise<boolean> => {
-    try {
-        const supabase = await createSupabase();
-        const { data , error } = await supabase
-        .from('propiedades')
-        .insert(propiedad);
-        
-        if(error) {
-            console.error("Error inserting property:", error);
-            return false;
-        }
-        return true;
-    }
-    catch(error){
-        console.error("Error posting property:", error);
-        return false;
-    }
+const postPropiedad = async (
+  propiedad: PropDetail
+): Promise<{ id: number }> => {
+  const supabase = await createSupabase();
 
+  // Si viene como string, lo convierto a array
+  const servicios_json =
+    Array.isArray((propiedad as any).servicios_json)
+      ? (propiedad as any).servicios_json
+      : typeof (propiedad as any).servicios_json === "string"
+      ? ((() => {
+          try {
+            const p = JSON.parse((propiedad as any).servicios_json);
+            return Array.isArray(p) ? p : [];
+          } catch { return []; }
+        })())
+      : [];
+
+  const payload = {
+    ...propiedad,
+    servicios_json, // aseguro JSON array
+  };
+
+  const { data, error } = await supabase
+    .from("propiedades")
+    .insert(payload)
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    console.error("Error inserting property:", error);
+    throw new Error(error?.message || "Insert failed");
+  }
+
+  return { id: data.id };
 };
 
 
@@ -124,5 +141,7 @@ const getPropiedadesCardList = async (): Promise<CardListDto[]> => {
         return [];
     }
 }
+
+{/* IMAGENES */}
 
 export { getPropiedades, postPropiedad , getPropiedadesCard , getPropiedadesCardList , getPropiedadById };

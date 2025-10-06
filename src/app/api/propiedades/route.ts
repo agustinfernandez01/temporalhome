@@ -12,16 +12,21 @@ async function GET() : Promise<Response> {
     }
 }
 
-async function POST(request : Request) : Promise<Response> {
-    try{
-        const body = await request.json();
-        const success = await postPropiedad(body);
-        return NextResponse.json({ success }, { status: success ? 201 : 400 });
-    }
-    catch(error){
-        console.error("Error posting property:", error);
-        return NextResponse.json({ error: "Error posting property" }, { status: 500 });
-    }
+async function POST(request: Request): Promise<Response> {
+  try {
+    const body = await request.json();
+
+    // Llamo al repo que devuelve { id }
+    const { id } = await postPropiedad(body);
+
+    return NextResponse.json({ success: true, id }, { status: 201 });
+  } catch (error: any) {
+    console.error("Error posting property:", error);
+    return NextResponse.json(
+      { success: false, error: error?.message || "Error posting property" },
+      { status: 500 }
+    );
+  }
 }
 
 export { GET , POST };
