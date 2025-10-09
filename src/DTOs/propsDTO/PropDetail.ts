@@ -1,3 +1,5 @@
+
+// FRONT PROPIEDAD DETALLADA
 export default interface PropDetail {
     id: number;
     nombre: string;

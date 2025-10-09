@@ -1,185 +1,233 @@
 'use client';
-import AdminDTO  from '@/DTOs/propsDTO/AdminDto';
-import { cache, useEffect, useState } from 'react';
-import ModalAdd from '@/app/Modals/ModalAdd';
+import { useEffect, useState } from 'react';
+import ModalActions from '@/app/Modals/ModalActions';
 import { PlusIcon } from '@heroicons/react/24/outline';
+import AdminDTO from '@/DTOs/propsDTO/AdminDto';
 
+type Accion = 'add' | 'edit';
 
-const page = () => {
-    const [propiedades, setPropiedades] = useState<AdminDTO[]>([]);
-    const [openModal, setOpenModal] = useState(false);
+const Page = () => {
+  const [propiedades, setPropiedades] = useState<AdminDTO[]>([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [action, setAction] = useState<Accion>('add');
+  const [selectedProp, setSelectedProp] = useState<AdminDTO | null>(null);
+  const [loading, setLoading] = useState(false);
 
-    const fetchProps = async () => {
-        try {
-            const response = await fetch('/api/propiedades', { 
-                cache: 'no-cache', 
-                credentials: 'include' 
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            console.log('Datos recibidos:', data); // Para debug
-            setPropiedades(data);
-        } catch (error) {
-            console.error('Error fetching properties:', error);
-            setPropiedades([]);
-        }
+  const fetchProps = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/propiedades', {
+        cache: 'no-cache',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setPropiedades(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      setPropiedades([]);
+    } finally {
+      setLoading(false);
     }
-    useEffect(() => {
-        fetchProps();
-    }, []);
+  };
+
+  useEffect(() => {
+    fetchProps();
+  }, []);
+
+  // Normaliza servicios para pintar chips
+  const getServicios = (value: unknown): string[] => {
+    try {
+      if (Array.isArray(value)) return value as string[];
+      if (typeof value === 'string') {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  };
+
+  const handleAdd = () => {
+    setAction('add');
+    setSelectedProp(null);
+    setOpenModal(true);
+  };
+
+  const handleEdit = (prop: AdminDTO) => {
+    setAction('edit');
+    setSelectedProp(prop);
+    setOpenModal(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('¿Eliminar esta propiedad?')) return;
+    try {
+      // Optimista
+      const prev = propiedades;
+      setPropiedades((p) => p.filter((x) => x.id !== id));
+      const res = await fetch(`/api/propiedades/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('DELETE failed');
+    } catch (e) {
+      console.error(e);
+      // fallback: recargar lista si falló
+      fetchProps();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-full mx-auto px-4">
-            <div className="mb-8">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Propiedades
-                    </h1>
-                    <p className="mt-2 text-gray-600">
-                        Gestiona todas las propiedades del sistema
-                    </p>
-                </div>
-                <button 
-                    onClick={() => {
-                        setOpenModal(true);
-                    }}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-                >
-                    <PlusIcon className="h-5 w-5 mr-2" aria-hidden="true" />
-                    Agregar Propiedad
-                </button>
-            </div>
-
-            <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full table-auto divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-                                    ID
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                    Nombre
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                                    Dirección
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-                                    Capacidad
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                                    Tipo
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-                                    Ambientes
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-                                    Baños
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-                                    Camas
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                                    Estado
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-64">
-                                    Descripción
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                                    Servicios
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                                    Ubicación Google
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                                    Cocheras
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                    Acciones
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {propiedades.map((prop, index) => (
-                                <tr key={prop.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {prop.id}
-                                    </td>
-                                    <td className="px-4 py-4 text-sm text-gray-900">
-                                        {prop.nombre}
-                                    </td>
-                                    <td className="px-4 py-4 text-sm text-gray-500">
-                                        {prop.direccion}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {prop.capacidad}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {prop.tipo}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {prop.ambientes}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {prop.banios}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {prop.camas}
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {prop.estado}
-                                    </td>
-                                    <td className="px-4 py-4 text-sm text-gray-500">
-                                        <div className="max-h-16 overflow-y-auto max-w-xs">
-                                            {prop.descripcion}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-4 text-sm text-gray-500">
-                                        <div className="max-h-16 overflow-y-auto max-w-xs">
-                                            {prop.servicios}
-                                        </div>
-                                    </td>
-                                       <td className="px-4 py-4 text-sm text-gray-500">
-                                        <div className="max-h-16 overflow-y-auto max-w-xs">
-                                            {prop.ubicacionGoogle}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-4 text-sm text-gray-500">
-                                        <div className="max-h-16 overflow-y-auto max-w-xs">
-                                            {prop.cocheras}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button className="text-indigo-600 hover:text-indigo-900 mr-4">
-                                            Editar
-                                        </button>
-                                        <button className="text-red-600 hover:text-red-900">
-                                            Eliminar
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                
-                {propiedades.length === 0 && (
-                    <div className="text-center py-12">
-                        <p className="text-gray-500 text-lg">No hay propiedades disponibles</p>
-                    </div>
-                )}
-            </div>
-            {openModal && (
-                <ModalAdd open={openModal} onClose={() => setOpenModal(false)} />
-            )}
+      <div className="max-w-full mx-auto px-4">
+        <div className="mb-8">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900">Propiedades</h1>
+            <p className="mt-2 text-gray-600">Gestiona todas las propiedades del sistema</p>
+          </div>
+          <button
+            onClick={handleAdd}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" aria-hidden="true" />
+            Agregar Propiedad
+          </button>
         </div>
-    </div>
-  )
-}
 
-export default page
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+          <div className="w-full overflow-x-auto">
+            <table className="min-w-[1200px] w-full table-fixed text-sm divide-y divide-gray-200">
+              <colgroup>
+                <col className="w-14" />
+                <col className="w-56" />
+                <col className="w-56" />
+                <col className="w-20" />
+                <col className="w-24" />
+                <col className="w-20" />
+                <col className="w-16" />
+                <col className="w-16" />
+                <col className="w-28" />
+                <col className="w-64" />
+                <col className="w-56" />
+                <col className="w-48 md:table-column hidden" />
+                <col className="w-24 md:table-column hidden" />
+                <col className="w-36" />
+                <col className="w-40" />
+              </colgroup>
+
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dirección</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cap.</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amb.</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Baños</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Camas</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Servicios</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    Ubicación Google
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    Cocheras
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Imágenes</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody className="bg-white divide-y divide-gray-200">
+                {propiedades.map((prop, index) => (
+                  <tr key={prop.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-4 py-4 text-gray-900 text-center">{prop.id}</td>
+
+                    <td className="px-4 py-4 text-gray-900 truncate" title={prop.nombre}>{prop.nombre}</td>
+                    <td className="px-4 py-4 text-gray-500 truncate" title={prop.direccion}>{prop.direccion}</td>
+
+                    <td className="px-4 py-4 text-gray-900 text-center whitespace-nowrap">{prop.capacidad}</td>
+                    <td className="px-4 py-4 text-gray-900 whitespace-nowrap capitalize">{prop.tipo}</td>
+                    <td className="px-4 py-4 text-gray-900 text-center">{prop.ambientes}</td>
+
+                    {/* OJO: unificá nombres de campo: 'banios' vs 'banos' */}
+                    <td className="px-4 py-4 text-gray-900 text-center">{(prop as any).banios ?? (prop as any).banos}</td>
+                    <td className="px-4 py-4 text-gray-900 text-center">{prop.camas}</td>
+                    <td className="px-4 py-4 text-gray-900 capitalize">{prop.estado}</td>
+
+                    <td className="px-4 py-4 text-gray-500 truncate" title={prop.descripcion || '-'}>
+                      {prop.descripcion || '-'}
+                    </td>
+
+                    <td className="px-4 py-4 text-gray-500">
+                      <div className="flex flex-wrap gap-2 max-w-[220px]">
+                        {getServicios((prop as any).servicios_json).map((s: string, i: number) => (
+                          <span key={`${prop.id}-${s}-${i}`} className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-4 text-gray-500 truncate hidden md:table-cell" title={prop.ubicacionGoogle}>
+                      {prop.ubicacionGoogle}
+                    </td>
+
+                    <td className="px-4 py-4 text-gray-500 hidden md:table-cell text-center">
+                      {prop.cocheras ?? '-'}
+                    </td>
+
+                    <td className="px-4 py-4 text-gray-500">
+                      {Array.isArray((prop as any).imagenes) && (prop as any).imagenes.length > 0 ? 'Imágenes disponibles' : 'Sin imágenes'}
+                    </td>
+
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-right">
+                      <button
+                        onClick={() => handleEdit(prop)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-4"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(prop.id)}
+                        className="text-red-600 hover:text-red-900 mr-4"
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {loading && propiedades.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Cargando propiedades…</p>
+            </div>
+          )}
+          {!loading && propiedades.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">No hay propiedades disponibles</p>
+            </div>
+          )}
+        </div>
+
+        {openModal && (
+          <ModalActions
+            open={openModal}
+            onClose={() => {
+              setOpenModal(false);
+              setSelectedProp(null);
+              // refrescamos la grilla post-guardado desde el modal (si tu modal hace POST/PUT)
+              fetchProps();
+            }}
+            accion={action}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Page;

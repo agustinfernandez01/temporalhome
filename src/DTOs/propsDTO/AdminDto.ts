@@ -9,7 +9,8 @@ export default interface AdminDto {
     camas : number;
     estado : string;
     descripcion : string;
-    servicios : string;
+    servicios_json : string;
     cocheras: number;
     ubicacionGoogle : string;
+    imagenes : number | null;
 }

@@ -6,9 +6,10 @@ import { X, Upload, MapPin, Home, Users, Bed, Bath, Grid } from 'lucide-react';
 type ModalAddProps = {
   open: boolean;
   onClose: () => void;
+  accion?: string;
 };
 
-const ModalAdd = ({ open, onClose }: ModalAddProps) => {
+const ModalActions = ({ open, onClose, accion}: ModalAddProps) => {
 
   const [ nombre , setNombre ] = useState('');
   const [ direccion , setDireccion ] = useState('');
@@ -23,7 +24,9 @@ const ModalAdd = ({ open, onClose }: ModalAddProps) => {
   const [ servicios , setServicios ] = useState<string[]>([]);
   const [ imagenes , setImagenes ] = useState<FileList | null>(null);
 
-  if (!open) return null;
+
+
+  if (!open && accion == "add") return null;
 
   return (
     <div
@@ -285,4 +288,4 @@ const ModalAdd = ({ open, onClose }: ModalAddProps) => {
   );
 };
 
-export default ModalAdd;
+export default ModalActions;

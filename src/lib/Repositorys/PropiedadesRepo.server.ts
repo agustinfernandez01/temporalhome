@@ -8,23 +8,44 @@ import PropDetail from "@/DTOs/propsDTO/PropDetail";
 
 // Mostrar todas las propiedades 
 const getPropiedades = async (): Promise<AdminDTO[]> => {
+  try {
+    const supabase = await createSupabase();
+    const { data, error } = await supabase
+      .from('propiedades')
+      .select(`
+        id,
+        nombre,
+        direccion,
+        capacidad,
+        tipo,
+        ambientes,
+        banios,
+        camas,
+        estado,
+        descripcion,
+        servicios_json,
+        cocheras,
+        ubicacionGoogle,
+        imagenes (id)    -- 👈 esto trae un array con los IDs de imágenes relacionadas
+      `);
 
-    try{
-        const supabase = await createSupabase();
-        const { data, error } = await supabase
-            .from('propiedades')
-            .select('id,nombre,direccion,capacidad,tipo,ambientes,banios,camas,estado,descripcion,servicios,cocheras,ubicacionGoogle');
-        if (error) {
-            console.error("Error fetching properties:", error);
-            return [];
-        }
-        return data ?? [];
+    if (error) {
+      console.error("Error fetching properties:", error);
+      return [];
     }
-    catch(error){
-        console.error("Error fetching properties:", error);
-        return [];
-    }
-}
+
+    // si querés agregar un campo booleano para el front
+    const propiedades = data?.map((p: any) => ({
+      ...p,
+      tieneImagenes: p.imagenes && p.imagenes.length > 0
+    })) ?? [];
+
+    return propiedades;
+  } catch (error) {
+    console.error("Error fetching properties:", error);
+    return [];
+  }
+};
 
 // Mostrar una propiedad por ID
 
@@ -141,6 +162,22 @@ const getPropiedadesCardList = async (): Promise<CardListDto[]> => {
         return [];
     }
 }
+
+
+export async function deletePropiedadById(id: number): Promise<boolean> {
+  const supabase = await createSupabase();
+
+  // Si querés borrar imágenes/relaciones, hacelo en una transacción del lado SQL
+  // o con on delete cascade. Acá va el delete simple:
+  const { error, count } = await supabase
+    .from('propiedades')
+    .delete({ count: 'exact' })
+    .eq('id', id);
+
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}
+
 
 {/* IMAGENES */}
 

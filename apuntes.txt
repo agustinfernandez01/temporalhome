@@ -1,9 +1,1 @@
-parametros que recibe cardlist.tsx
-
-id
-img
-nombre
-descripcion
-cocheras
-capacidad
-ambientes
+ESTABA EN : MODAL ACTIONS - ABRIR MODAL DEPENDIENDO LA ACCION
