@@ -6,6 +6,13 @@ import AdminDTO from '@/DTOs/propsDTO/AdminDto';
 
 type Accion = 'add' | 'edit';
 
+type ModalProps = {
+  open: boolean;
+  onClose: () => void;
+  accion: 'add' | 'edit';
+  props: AdminDTO[];
+}
+
 const Page = () => {
   const [propiedades, setPropiedades] = useState<AdminDTO[]>([]);
   const [openModal, setOpenModal] = useState(false);
@@ -216,13 +223,21 @@ const Page = () => {
         {openModal && (
           <ModalActions
             open={openModal}
+            propiedades={propiedades} // 👈 coincide con el tipo nuevo
             onClose={() => {
               setOpenModal(false);
               setSelectedProp(null);
-              // refrescamos la grilla post-guardado desde el modal (si tu modal hace POST/PUT)
               fetchProps();
             }}
             accion={action}
+            initialData={
+              selectedProp
+                ? {
+                    ...selectedProp,
+                    ambientes: String(selectedProp.ambientes),
+                  }
+                : undefined
+            }
           />
         )}
       </div>
