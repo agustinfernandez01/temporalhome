@@ -233,9 +233,15 @@ const Page = () => {
             initialData={
               selectedProp
                 ? {
-                    ...selectedProp,
-                    ambientes: String(selectedProp.ambientes),
-                  }
+                  ...selectedProp,
+                  ambientes: String(selectedProp.ambientes),
+                  // 👇 PASAMOS SERVICIOS TAL CUAL VIENE (JSON string o array)
+                  servicios: (selectedProp as any).servicios_json ?? (selectedProp as any).servicios ?? null,
+                  imagenes:
+                    Array.isArray((selectedProp as any).imagenes)
+                      ? (selectedProp as any).imagenes
+                      : undefined,
+                }
                 : undefined
             }
           />

@@ -179,6 +179,4 @@ export async function deletePropiedadById(id: number): Promise<boolean> {
 }
 
 
-{/* IMAGENES */}
-
 export { getPropiedades, postPropiedad , getPropiedadesCard , getPropiedadesCardList , getPropiedadById };

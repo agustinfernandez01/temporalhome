@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { X, Upload, MapPin, Home, Users, Bed, Bath, Grid } from 'lucide-react';
-import AdminDTO  from '../../DTOs/propsDTO/AdminDto';
+import { X, Upload, MapPin, Home, Users, Bed, Bath, Grid, Trash2 } from 'lucide-react';
 
 type ModalMode = 'add' | 'edit' | 'view';
 
@@ -18,8 +17,8 @@ type PropInitialData = {
   banos?: number;
   camas?: number;
   descripcion?: string;
-  servicios?: string[];
-  // podrías agregar acá imágenes existentes si las renderizas en otro bloque
+  servicios?: string[] | string | null;
+  imagenes?: string[]; // URLs de imágenes existentes
 } | null;
 
 type ModalProps = {
@@ -27,8 +26,7 @@ type ModalProps = {
   onClose: () => void;
   accion?: ModalMode;
   initialData?: PropInitialData;
-  // 👇 agregado para compatibilidad con la llamada del padre
-  propiedades?: AdminDTO[];
+  propiedades?: any[];
 };
 
 const ALL_SERVICIOS = [
@@ -37,7 +35,6 @@ const ALL_SERVICIOS = [
   'Piscina', 'Gimnasio', 'Parking', 'Seguridad 24hs'
 ];
 
-// ✅ unificadas las props en un solo objeto (sin quitar lógica/estética)
 const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propiedades }: ModalProps) => {
   const isView = accion === 'view';
   const isEdit = accion === 'edit';
@@ -55,10 +52,93 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
   const [servicios, setServicios] = useState<string[]>([]);
   const [imagenes, setImagenes] = useState<FileList | null>(null);
 
-  // Guard de render (no cambia estética: simplemente no renderiza cerrado)
+  // 🆕 Estado para imágenes existentes y preview de nuevas
+  const [imagenesExistentes, setImagenesExistentes] = useState<string[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+
+  const toLowerNoAccents = (s: string) =>
+  s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+// Mapa de sinónimos -> valor canónico EXACTO de ALL_SERVICIOS
+const ALIAS: Record<string, string> = {
+  'wifi': 'WiFi',
+  'wi-fi': 'WiFi',
+
+  'aire acondicionado': 'Aire Acondicionado',
+  'ac': 'Aire Acondicionado',
+
+  'calefaccion': 'Calefacción',
+
+  'cocina': 'Cocina',
+
+  'lavarropas': 'Lavarropas',
+
+  'tv cable': 'TV Cable',
+  'tv': 'TV Cable',
+  'cable': 'TV Cable',
+
+  'balcon': 'Balcón',
+
+  'terraza': 'Terraza',
+
+  'piscina': 'Piscina',
+  'pileta': 'Piscina',
+
+  'gimnasio': 'Gimnasio',
+
+  'parking': 'Parking',
+  'estacionamiento': 'Parking',
+  'cochera': 'Parking',
+  'auto': 'Parking',
+
+  'seguridad 24hs': 'Seguridad 24hs',
+  'seguridad 24 hs': 'Seguridad 24hs',
+  'seguridad': 'Seguridad 24hs',
+};
+
+// intenta devolver el valor canónico EXACTO de ALL_SERVICIOS
+const canonizeServicio = (input: string): string | null => {
+  const key = toLowerNoAccents(String(input).trim());
+
+  // 1) si hay sinónimo, devolvemos su canónico
+  if (ALIAS[key]) return ALIAS[key];
+
+  // 2) si matchea exactamente alguno de ALL_SERVICIOS (case/acentos agnóstico), devolverlo
+  for (const op of ALL_SERVICIOS) {
+    if (toLowerNoAccents(op) === key) return op;
+  }
+  return null;
+};
+
+const normalizeIncomingServicios = (
+  incoming: string[] | string | null | undefined
+): string[] => {
+  if (!incoming) return [];
+
+  let arr: string[] = [];
+  if (Array.isArray(incoming)) {
+    arr = incoming.map(String);
+  } else if (typeof incoming === 'string') {
+    const str = incoming.trim();
+    if (str === '') return [];
+    // puede ser JSON o CSV
+    try {
+      const parsed = JSON.parse(str);
+      arr = Array.isArray(parsed) ? parsed.map(String) : str.split(',').map(String);
+    } catch {
+      arr = str.split(',').map(String);
+    }
+  }
+
+  const mapped = arr
+    .map(canonizeServicio)
+    .filter((v): v is string => Boolean(v));
+
+  return Array.from(new Set(mapped)); // único y ordenado
+};
+
   if (!open) return null;
 
-  // Prefill para edición, limpieza para alta
   useEffect(() => {
     if (isEdit && initialData) {
       setNombre(initialData.nombre ?? '');
@@ -71,28 +151,79 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
       setBanos(initialData.banos ?? 1);
       setCamas(initialData.camas ?? 1);
       setDescripcion(initialData.descripcion ?? '');
-      setServicios(initialData.servicios ?? []);
+
+      // 🆕 normalizar servicios para preselección
+      setServicios(normalizeIncomingServicios(initialData.servicios));
+
       setImagenes(null);
+      setImagenesExistentes(initialData.imagenes ?? []);
+      setPreviewUrls([]);
+    }
+    if (accion === 'view' && initialData) {
+      setImagenesExistentes(initialData.imagenes ?? []);
+      // 🆕 también mostramos servicios en modo view (por si los renderizás como texto)
+      setServicios(normalizeIncomingServicios(initialData.servicios));
     }
     if (accion === 'add') {
-      // si quisieras limpiar explícitamente al abrir en modo add, podrías hacerlo aquí
-      // mantengo así para no interferir con lógicas externas
+      setImagenesExistentes([]);
+      setPreviewUrls([]);
+      setServicios([]); // limpio selección en add
     }
   }, [accion, isEdit, initialData]);
 
-  // Toggle de servicios sin cambiar el markup
+  // 🆕 Limpiar URLs de preview cuando se desmonte o cambien archivos
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
+
   const toggleServicio = (s: string) => {
-    setServicios((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    // usar valor canónico siempre
+    const canon = canonizeServicio(s);
+    if (!canon) return;
+    setServicios(prev =>
+      prev.includes(canon) ? prev.filter(x => x !== canon) : [...prev, canon]
     );
   };
 
-  // Handler de archivos (mantengo tu UI; solo leo el FileList)
+  // 🆕 Handler mejorado para preview de nuevas imágenes
   const onFilesChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    setImagenes(e.target.files);
+    const files = e.target.files;
+    setImagenes(files);
+
+    if (files && files.length > 0) {
+      // Limpiar URLs anteriores
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+
+      // Crear nuevos previews
+      const newPreviews = Array.from(files).map(file => URL.createObjectURL(file));
+      setPreviewUrls(newPreviews);
+    } else {
+      setPreviewUrls([]);
+    }
   };
 
-  // Envío según modo (POST alta / PUT edición). No toco tu UI; solo lógica.
+  // 🆕 Eliminar imagen existente
+  const removeExistingImage = (index: number) => {
+    setImagenesExistentes(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // 🆕 Eliminar preview de nueva imagen
+  const removePreviewImage = (index: number) => {
+    if (imagenes) {
+      const dt = new DataTransfer();
+      Array.from(imagenes).forEach((file, i) => {
+        if (i !== index) dt.items.add(file);
+      });
+      setImagenes(dt.files.length > 0 ? dt.files : null);
+
+      // Actualizar previews
+      URL.revokeObjectURL(previewUrls[index]);
+      setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
   const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     if (isView) {
@@ -103,6 +234,7 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
     const payload = {
       nombre, direccion, ubicacion, capacidad, estado, tipo,
       ambientes, banos, camas, descripcion, servicios,
+      imagenesExistentes, // Incluir las imágenes que se mantienen
     };
 
     const formData = new FormData();
@@ -112,7 +244,7 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
     }
 
     try {
-      const url = isEdit && initialData?.id
+      const url = (isEdit && initialData?.id)
         ? `/api/propiedades/${initialData.id}`
         : `/api/propiedades`;
       const method = isEdit ? 'PUT' : 'POST';
@@ -122,7 +254,6 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
       onClose();
     } catch (err) {
       console.error(err);
-      // acá podrías mostrar un toast o mensaje; no toco la UI existente
     }
   };
 
@@ -136,20 +267,22 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
       : accion === 'edit' ? 'Guardar Cambios'
         : 'Cerrar';
 
+  // 🆕 Verificar si hay imágenes (existentes o nuevas)
+  const hasImages = imagenesExistentes.length > 0 || previewUrls.length > 0;
+
   return (
     <div
       className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
-      onClick={onClose}   // 👈 backdrop cierra (no modificado)
+      onClick={onClose}
       aria-modal="true"
       role="dialog"
     >
       <form
-        onClick={(e) => e.stopPropagation()} // 👈 evita cerrar al clickear contenido
+        onClick={(e) => e.stopPropagation()}
         onSubmit={onSubmit}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
       >
-
-        {/* Header (estética intacta) */}
+        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
@@ -159,7 +292,7 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
           </div>
           <button
             type="button"
-            onClick={onClose}  // 👈 X cierra (igual que antes)
+            onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors duration-200"
             aria-label="Cerrar"
           >
@@ -167,7 +300,7 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
           </button>
         </div>
 
-        {/* Content (misma estructura/clases; solo agrego value/onChange/disabled) */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -332,7 +465,7 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
                   value={camas}
                   onChange={(e) => setCamas(Number(e.target.value || 1))}
                   disabled={isView}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duración-200"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                 />
               </div>
 
@@ -348,6 +481,7 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
                   onChange={(e) => setDescripcion(e.target.value)}
                   disabled={isView}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 resize-none"
+                  rows={4}
                 />
               </div>
 
@@ -375,38 +509,114 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
                 </div>
               </div>
 
-              {/* IMAGENES */}
-              <div className="md:col-span-2 lg:col-span-3 space-y-2">
+              {/* IMAGENES - Sección mejorada con preview */}
+              <div className="md:col-span-2 lg:col-span-3 space-y-4">
                 <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
                   <Upload className="w-4 h-4 text-orange-500" />
                   <span>Imágenes de la Propiedad</span>
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-orange-500 transition-colors duration-200">
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">Arrastra y suelta las imágenes aquí</p>
-                  <p className="text-sm text-gray-400 mb-4">o</p>
-                  <div className="cursor-pointer">
-                    <span className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 inline-block">
-                      Seleccionar Archivos
-                    </span>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={onFilesChange}
-                      disabled={isView}
-                      className="hidden"
-                    />
+
+                {/* 🆕 Galería de imágenes existentes */}
+                {imagenesExistentes.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600 font-medium">Imágenes actuales:</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {imagenesExistentes.map((url, index) => (
+                        <div key={`existing-${index}`} className="relative group">
+                          <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-orange-500 transition-all duration-200">
+                            <img
+                              src={url}
+                              alt={`Imagen ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          {!isView && (
+                            <button
+                              type="button"
+                              onClick={() => removeExistingImage(index)}
+                              className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center hover:bg-red-600 shadow-lg"
+                              aria-label="Eliminar imagen"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">Máximo 10 imágenes - JPG, PNG</p>
-                  {/* (opcional) preview simple: <p className="text-xs mt-1">{imagenes?.length || 0} seleccionadas</p> */}
-                </div>
+                )}
+
+                {/* 🆕 Preview de nuevas imágenes seleccionadas */}
+                {previewUrls.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600 font-medium">Nuevas imágenes a subir:</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {previewUrls.map((url, index) => (
+                        <div key={`preview-${index}`} className="relative group">
+                          <div className="aspect-square rounded-lg overflow-hidden border-2 border-orange-300 hover:border-orange-500 transition-all duration-200">
+                            <img
+                              src={url}
+                              alt={`Nueva imagen ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          {!isView && (
+                            <button
+                              type="button"
+                              onClick={() => removePreviewImage(index)}
+                              className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center hover:bg-red-600 shadow-lg"
+                              aria-label="Eliminar imagen"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 🆕 Mensaje cuando no hay imágenes */}
+                {!hasImages && (isEdit || isView) && (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50">
+                    <Upload className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 font-medium">No hay imágenes para esta propiedad</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      {isEdit ? 'Puedes agregar imágenes a continuación' : 'Esta propiedad aún no tiene imágenes cargadas'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Selector de archivos (se muestra solo en modo add/edit) */}
+                {!isView && (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-orange-500 transition-colors duration-200">
+                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-2">
+                      {imagenesExistentes.length > 0 ? 'Agregar más imágenes' : 'Arrastra y suelta las imágenes aquí'}
+                    </p>
+                    <p className="text-sm text-gray-400 mb-4">o</p>
+                    <label className="cursor-pointer inline-block">
+                      <span className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 inline-block">
+                        Seleccionar Archivos
+                      </span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={onFilesChange}
+                        disabled={isView}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="text-xs text-gray-400 mt-2">Máximo 10 imágenes - JPG, PNG</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer (estética intacta; botón dinámico por modo) */}
+        {/* Footer */}
         <div className="flex justify-between items-center p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
           <p className="text-sm text-gray-500">
             Todos los campos marcados son obligatorios
@@ -414,8 +624,8 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
           <div className="flex space-x-4">
             <button
               type="button"
-              onClick={onClose}  // 👈 “Cancelar” cierra
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duración-200 font-medium"
+              onClick={onClose}
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium"
             >
               Cancelar
             </button>
@@ -423,14 +633,14 @@ const ModalActions = ({ open, onClose, accion = 'add', initialData = null, propi
               <button
                 type="button"
                 onClick={onClose}
-                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duración-200 transform hover:scale-105 shadow-lg font-medium"
+                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium"
               >
                 {submitLabel}
               </button>
             ) : (
               <button
                 type="submit"
-                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duración-200 transform hover:scale-105 shadow-lg font-medium"
+                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium"
               >
                 {submitLabel}
               </button>

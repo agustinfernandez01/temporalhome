@@ -1,45 +1,38 @@
-import { createSupabase } from '../../lib/index.server';
+import { createClient } from '@supabase/supabase-js';
+import { v4 as uuid } from 'uuid';
 
-type ImagenRow = {
-  id: number;
-  created_at: string;
-  propiedad_id: number;
-  bucket: string;
-  path: string;
-  is_primary: boolean;
-};
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-export const getImagenesByPropiedad = async (propiedadId: number): Promise<ImagenRow[]> => {
-  const supabase = await createSupabase();
-  const { data, error } = await supabase
-    .from('imagenes')
-    .select('*')
-    .eq('propiedad_id', propiedadId)
-    .order('is_primary', { ascending: false })
-    .order('created_at', { ascending: true });
-  if (error) throw error;
-  return data ?? [];
-};
+const slugify = (s: string) =>
+  s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-export const setImagenPrincipal = async (imageId: number, propiedadId: number): Promise<void> => {
-  const supabase = await createSupabase();
-  // desmarcar todas
-  let { error } = await supabase.from('imagenes').update({ is_primary: false }).eq('propiedad_id', propiedadId);
-  if (error) throw error;
-  // marcar la elegida
-  ({ error } = await supabase.from('imagenes').update({ is_primary: true }).eq('id', imageId));
-  if (error) throw error;
-};
+type Uploaded = { path: string; publicUrl: string };
 
-export const deleteImagenRow = async (imageId: number, propiedadId: number): Promise<void> => {
-  const supabase = await createSupabase();
-  const { error } = await supabase.from('imagenes').delete().eq('id', imageId).eq('propiedad_id', propiedadId);
-  if (error) throw error;
-};
+export async function uploadPropImages(
+  files: FileList | File[],
+  propId: number,
+  bucket = 'propiedades'
+): Promise<Uploaded[]> {
+  const arr = Array.from(files);
+  const out: Uploaded[] = [];
 
-// Si tu bucket es público podés derivar la URL acá mismo:
-export const publicUrlFor = (bucket: string, path: string): string => {
-  const supabase = (global as any).__sbPublic ??= require('@supabase/ssr')
-    .createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
-};
+  for (const file of arr) {
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const name = slugify(file.name.replace(/\.[^/.]+$/, ''));
+    const filename = `${uuid()}-${name}.${ext}`;
+
+    // 👉 ESTE ES EL PATH
+    const path = `${propId}/${filename}`;
+
+    const { error } = await supabase.storage.from(bucket).upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,            // evita sobreescribir
+      contentType: file.type || undefined,
+    });
+    if (error) throw error;
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    out.push({ path, publicUrl: data.publicUrl });
+  }
+  return out;
+}
