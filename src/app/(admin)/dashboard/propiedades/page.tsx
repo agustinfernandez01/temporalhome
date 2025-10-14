@@ -1,24 +1,84 @@
 'use client';
 import { useEffect, useState } from 'react';
-import ModalActions from '@/app/Modals/ModalActions';
+import { createPortal } from 'react-dom';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import AdminDTO from '@/DTOs/propsDTO/AdminDto';
+import ModalActions from '@/app/Modals/ModalActions';
 
-type Accion = 'add' | 'edit';
+export type Accion = 'add' | 'edit';
 
-type ModalProps = {
+/** ---- PROPIEDADES DEL MODAL ---- */
+function ModalPortal({
+  open,
+  onClose,
+  children,
+}: {
   open: boolean;
   onClose: () => void;
-  accion: 'add' | 'edit';
-  props: AdminDTO[];
+  children: React.ReactNode;
+}) {
+  // Bloquear scroll del body mientras el modal está abierto
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <>
+      {/* Overlay */}
+      <div
+        className="fixed inset-0 z-[1000] bg-black/50"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      {/* Contenedor centrado */}
+      <div
+        className="fixed inset-0 z-[1001] grid place-items-center p-4"
+        role="dialog"
+        aria-modal="true"
+        onClick={onClose}
+      >
+        <div
+          className="w-full max-w-4xl rounded-2xl bg-white shadow-2xl overflow-hidden"
+          onClick={(e) => e.stopPropagation()} // evita cerrar al click interior
+        >
+          {children}
+        </div>
+      </div>
+    </>,
+    document.body
+  );
 }
+/** ---- FIN PROPIEDADES DEL MODAL ---- */
 
 const Page = () => {
   const [propiedades, setPropiedades] = useState<AdminDTO[]>([]);
-  const [openModal, setOpenModal] = useState(false);
-  const [action, setAction] = useState<Accion>('add');
-  const [selectedProp, setSelectedProp] = useState<AdminDTO | null>(null);
   const [loading, setLoading] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [accion, setAccion] = useState<Accion>('add');
+    const [propiedadSeleccionada, setPropiedadSeleccionada] = useState<AdminDTO | null>(null);
+
+  const handleAdd = () => {
+    setOpenModal(true);
+    setAccion('add');
+  };
+
+  const handleEdit = (propiedad: AdminDTO) => {
+    setOpenModal(true);
+    setAccion('edit');
+    setPropiedadSeleccionada(propiedad);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    fetchProps(); // Refrescar lista después de cerrar el modal
+  };
 
   const fetchProps = async () => {
     try {
@@ -54,18 +114,6 @@ const Page = () => {
     } catch {
       return [];
     }
-  };
-
-  const handleAdd = () => {
-    setAction('add');
-    setSelectedProp(null);
-    setOpenModal(true);
-  };
-
-  const handleEdit = (prop: AdminDTO) => {
-    setAction('edit');
-    setSelectedProp(prop);
-    setOpenModal(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -220,32 +268,14 @@ const Page = () => {
           )}
         </div>
 
-        {openModal && (
+        {/* ---- Render del modal fuera del flujo (portal) ---- */}
+        <ModalPortal open={openModal} onClose={handleCloseModal}>
           <ModalActions
-            open={openModal}
-            propiedades={propiedades} // 👈 coincide con el tipo nuevo
-            onClose={() => {
-              setOpenModal(false);
-              setSelectedProp(null);
-              fetchProps();
-            }}
-            accion={action}
-            initialData={
-              selectedProp
-                ? {
-                  ...selectedProp,
-                  ambientes: String(selectedProp.ambientes),
-                  // 👇 PASAMOS SERVICIOS TAL CUAL VIENE (JSON string o array)
-                  servicios: (selectedProp as any).servicios_json ?? (selectedProp as any).servicios ?? null,
-                  imagenes:
-                    Array.isArray((selectedProp as any).imagenes)
-                      ? (selectedProp as any).imagenes
-                      : undefined,
-                }
-                : undefined
-            }
+            propiedad={propiedadSeleccionada}
+            accion={accion}
+            onClose={handleCloseModal}
           />
-        )}
+        </ModalPortal>
       </div>
     </div>
   );

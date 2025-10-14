@@ -12,5 +12,5 @@ export default interface AdminDto {
     servicios_json : string;
     cocheras: number;
     ubicacionGoogle : string;
-    imagenes : number | null;
+    imagenes : File[];
 }

@@ -24,7 +24,7 @@ export async function uploadPropImages(
     // 👉 ESTE ES EL PATH
     const path = `${propId}/${filename}`;
 
-    const { error } = await supabase.storage.from(bucket).upload(path, file, {
+    const { error } = await supabase.storage.from(`${bucket}.imagenes`).upload(path, file, {
       cacheControl: '3600',
       upsert: false,            // evita sobreescribir
       contentType: file.type || undefined,
@@ -34,5 +34,13 @@ export async function uploadPropImages(
     const { data } = supabase.storage.from(bucket).getPublicUrl(path);
     out.push({ path, publicUrl: data.publicUrl });
   }
+
   return out;
+}
+
+export async function deletePropImage(path: string, bucket = 'propiedades'): Promise<boolean | void> {
+  const { error } = await supabase.storage.from(`${bucket}.imagenes`).remove([path]);
+  if (error) throw error;
+
+  return true;
 }
